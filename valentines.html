@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Valentine's Story</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- GSAP for High-End Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Pinyon+Script&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        valentine: {
+                            light: '#fff0f3',  /* Lavender Blush */
+                            cream: '#fff5f5',
+                            pink: '#ffb3c1',   /* Soft Pink */
+                            rose: '#ff758f',   /* Rose */
+                            red: '#c9184a',    /* Deep Red */
+                            dark: '#590d22'    /* Text Dark */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        script: ['Pinyon Script', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ff758f;
+        }
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 117, 143, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        
+        body:hover .cursor-outline {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 117, 143, 0.1);
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(255, 182, 193, 0.15);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        /* Timeline Vine Construction */
+        .vine-line {
+            height: 0; /* Will be animated by GSAP */
+            transition: height 0.1s linear;
+        }
+
+        /* Hide scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fff0f3; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffb3c1; 
+            border-radius: 4px;
+        }
+
+        /* Floating Animation for Polaroids */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(var(--r)); }
+            50% { transform: translateY(-10px) rotate(var(--r)); }
+            100% { transform: translateY(0px) rotate(var(--r)); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-valentine-light text-valentine-dark overflow-x-hidden selection:bg-valentine-rose selection:text-white cursor-none">
+
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Canvas Background -->
+    <canvas id="bg-canvas" class="fixed top-0 left-0 w-full h-full -z-10"></canvas>
+
+    <!-- Floating Audio Control -->
+    <div class="fixed top-6 right-6 z-50">
+        <button id="audioBtn" class="glass w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform text-valentine-red">
+            <i data-lucide="play" class="w-5 h-5 ml-1"></i>
+        </button>
+        <audio id="bgMusic" loop>
+            <!-- Placeholder for romantic royalty free music -->
+            <source src="/song/Soft Spot_spotdown.org.mp3" type="audio/mpeg">    
+        </audio>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex flex-col justify-center items-center text-center px-4 relative">
+        <div class="glass p-12 rounded-2xl max-w-3xl fade-in-section border border-white/60">
+            <div class="flex justify-center mb-4 text-valentine-red animate-pulse">
+                <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
+            </div>
+            <span class="text-valentine-rose font-semibold tracking-[0.3em] uppercase text-sm mb-4 block"> 11 Months Together</span>
+            <h1 class="font-script text-6xl md:text-8xl mb-6 text-gray-800 leading-tight">Be My<br><span class="text-valentine-red">Valentine</span></h1>
+            <p class="font-sans font-light text-lg md:text-xl max-w-xl mx-auto leading-relaxed text-gray-700">
+                MY LOVE LETTER TO YOU FROM SINGAPORE ❤️
+            </p>
+            <div class="mt-12 animate-bounce text-valentine-rose">
+                <i data-lucide="chevron-down" class="w-8 h-8 mx-auto"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Love Stats Section -->
+    <section class="py-20 px-4">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Stat 1 -->
+            <div class="glass-card p-8 rounded-xl text-center transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="text-5xl font-light mb-2 text-valentine-rose counter" data-target="270">0</div>
+                <div class="text-sm uppercase tracking-widest font-semibold text-gray-600">Days of Love</div>
+            </div>
+            <!-- Stat 2 -->
+            <div class="glass-card p-8 rounded-xl text-center transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="text-5xl font-light mb-2 text-valentine-red counter" data-target="1000000">0</div>
+                <div class="text-sm uppercase tracking-widest font-semibold text-gray-600">Dates</div>
+            </div>
+            <!-- Stat 3 -->
+            <div class="glass-card p-8 rounded-xl text-center transform hover:-translate-y-2 transition-transform duration-300">
+                <div class="text-5xl font-light mb-2 text-valentine-pink counter" data-target="1">0</div>
+                <div class="text-sm uppercase tracking-widest font-semibold text-gray-600">Valentine's Together</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Timeline Section -->
+    <section class="py-20 relative max-w-6xl mx-auto px-4" id="timeline-container">
+        <h2 class="font-script text-5xl text-center mb-16 text-gray-800">Our Love Story</h2>
+
+        <!-- The Vine (Central Line) -->
+        <div class="absolute left-4 md:left-1/2 top-40 bottom-20 w-1 bg-gray-200 rounded-full transform md:-translate-x-1/2">
+            <div class="w-full bg-gradient-to-b from-valentine-pink to-valentine-red vine-line rounded-full"></div>
+        </div>
+
+        <!-- Timeline Items -->
+        <div class="space-y-24 relative">
+            
+            <!-- Item 1 (Left) -->
+            <div class="timeline-item flex flex-col md:flex-row-reverse items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                
+                <div class="z-10 w-10 h-10 rounded-full bg-white border-4 border-valentine-rose shadow-lg absolute left-0 md:left-1/2 transform md:-translate-x-1/2 mt-6 md:mt-0 flex items-center justify-center text-valentine-red">
+                    <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
+                </div>
+
+                <div class="w-full md:w-5/12 pl-12 md:pl-0">
+                    <div class="glass-card p-6 rounded-xl hover:shadow-xl transition-shadow duration-300 border-r-0 md:border-r-4 border-r-valentine-rose border-l-4 md:border-l-0 border-l-valentine-rose">
+                        <span class="text-xs font-bold text-valentine-rose uppercase tracking-wider">Month 0</span>
+                        <h3 class="font-script text-3xl mb-3">The First Time I Met You</h3>
+                        <img src="images/first_meet.jpeg" alt="Adventure" class="w-full h-50 object-cover rounded-lg mb-4 opacity-90 hover:opacity-100 transition-opacity">
+                        <p class="text-sm leading-relaxed">Meeting you for the first time was nerve-wrecking & EXCITINGGG. You were SOOOOO beautiful, funny, and CUTE. We held hands for the first time too. You weren't scared of your homies finding out about me HOHO, that made me happy and more comfortable.  </p>
+                        <p class="text-sm leading-relaxed">It was only a few days since we started talking, but I fell for you.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Item 2 (Right) -->
+            <div class="timeline-item flex flex-col md:flex-row items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                
+                <!-- Heart Marker -->
+                <div class="z-10 w-10 h-10 rounded-full bg-white border-4 border-valentine-pink shadow-lg absolute left-0 md:left-1/2 transform md:-translate-x-1/2 mt-6 md:mt-0 flex items-center justify-center text-valentine-rose">
+                    <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
+                </div>
+
+                <div class="w-full md:w-5/12 pl-12 md:pl-0">
+                    <div class="glass-card p-6 rounded-xl hover:shadow-xl transition-shadow duration-300 border-l-4 border-l-valentine-pink">
+                        <span class="text-xs font-bold text-valentine-rose uppercase tracking-wider">Month 1</span>
+                        <h3 class="font-script text-3xl mb-3">Our First Date</h3>
+                        <img src="./images/first_date.jpeg" alt="First Date" class="w-full h-full object-cover rounded-lg mb-4 opacity-90 hover:opacity-100 transition-opacity">
+                        <p class="text-sm leading-relaxed">This was our first date after you came back from Korea.</p>
+                        <p class="text-sm leading-relaxed">On that day, you were so happy and proud to tell me about how you rejected a guy for me. YOU WERE RIGHT IT MADE ME REALLY HAPPY. I felt so reassured and hopeful about us and our relationship.</p>
+                        <p class="text-sm leading-relaxed">You got us a mofusan hipper to matchyy, we took solace studio and ATE YUMMY FOOD. There wasn't a moment where I felt awkward with you during this date. I LOVE TALKING TO YOU SO MUCH</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 3 (Left) -->
+            <div class="timeline-item flex flex-col md:flex-row-reverse items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                
+                <div class="z-10 w-10 h-10 rounded-full bg-white border-4 border-valentine-rose shadow-lg absolute left-0 md:left-1/2 transform md:-translate-x-1/2 mt-6 md:mt-0 flex items-center justify-center text-valentine-red">
+                    <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
+                </div>
+
+                <div class="w-full md:w-5/12 pl-12 md:pl-0">
+                    <div class="glass-card p-6 rounded-xl hover:shadow-xl transition-shadow duration-300 border-r-0 md:border-r-4 border-r-valentine-rose border-l-4 md:border-l-0 border-l-valentine-rose">
+                        <span class="text-xs font-bold text-valentine-rose uppercase tracking-wider">Month 3</span>
+                        <h3 class="font-script text-3xl mb-3">Official</h3>
+                        <img src="./images/official.jpeg" alt="Adventure" class="w-full h-48 object-cover rounded-lg mb-4 opacity-90 hover:opacity-100 transition-opacity">
+                        <p class="text-sm leading-relaxed">IT WAS THE DAY! THE DAY I ASKED YOU TO BE MY GIRLFRIEND</p>
+                        <p class="text-sm leading-relaxed">There was no doubt in my mine that you were the one for me. </p>
+                        <p class="text-sm leading-relaxed">Being someone that is very honest about my feelings, you took it whole heartedly and accepted me for who I am. You reciprocated my feelings, returned the same level of honesty about how you feel about me which gave me the confidence to ask you to be my girlfriend.
+                            I was nervous during the planning because this is all a first for me, but I wanted to make it amazing for you. YOU SAID YES SO ITS A WINNNNNN oooo and Marcey's was fire</p>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 4 (Right) -->
+            <div class="timeline-item flex flex-col md:flex-row items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                
+                <div class="z-10 w-10 h-10 rounded-full bg-white border-4 border-valentine-red shadow-lg absolute left-0 md:left-1/2 transform md:-translate-x-1/2 mt-6 md:mt-0 flex items-center justify-center text-valentine-dark">
+                    <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
+                </div>
+
+                <div class="w-full md:w-5/12 pl-12 md:pl-0">
+                    <div class="glass-card p-6 rounded-xl hover:shadow-xl transition-shadow duration-300 border-l-4 border-l-valentine-red">
+                        <span class="text-xs font-bold text-valentine-rose uppercase tracking-wider">Month 11</span>
+                        <h3 class="font-script text-3xl mb-3">Today</h3>
+                        <img src="./images/present.JPG" alt="Us" class="w-full h-auto object-cover rounded-lg mb-4 opacity-90 hover:opacity-100 transition-opacity">
+                        <p class="text-sm leading-relaxed">We are coming up to 1 year since we've known each other.</p>
+                        <p class="text-sm leading-relaxed">Being with you has been AMAZING WONDERFUL, you've made my life so much more brighter and I can't imagine life without you anymore.  </p>
+
+                        <p class="text-sm leading-relaxed">I love you so much and I love loving you :D </p>
+                    </div>
+                </div>
+            </div>
+          
+
+
+        </div>
+    </section>
+
+    <!-- Scattered Polaroid Gallery -->
+    <section class="py-24 overflow-hidden bg-white/30">
+        <h2 class="font-script text-5xl text-center mb-16 text-gray-800">Some of My Favorites</h2>
+        <div class="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto px-4">
+            
+            <!-- Polaroid 1 -->
+            <div class="bg-white p-3 pb-8 shadow-xl transform rotate-3 hover:rotate-0 hover:scale-110 transition-all duration-500 z-10 w-64 animate-float" style="--r: 3deg">
+                <div class="w-full h-56 bg-gray-100 overflow-hidden mb-3">
+                    <img src="./images/amanda1.JPG" class="w-full h-full object-cover">
+                </div>
+                <div class="font-script text-2xl text-center text-gray-600 flex justify-center items-center gap-2">
+                    cutiepie <i data-lucide="heart" class="w-4 h-4 text-valentine-red fill-current"></i>
+                </div>
+            </div>
+
+            <!-- Polaroid 2 -->
+            <div class="bg-white p-3 pb-8 shadow-xl transform -rotate-2 hover:rotate-0 hover:scale-110 transition-all duration-500 z-10 w-64 animate-float" style="--r: -2deg; animation-delay: 1s;">
+                <div class="w-full h-56 bg-gray-100 overflow-hidden mb-3">
+                    <img src="./images/amanda2.jpeg" class="w-full h-full object-cover">
+                </div>
+                <div class="font-script text-2xl text-center text-gray-600">Your Smile</div>
+            </div>
+
+            <!-- Polaroid 3 -->
+            <div class="bg-white p-3 pb-8 shadow-xl transform rotate-6 hover:rotate-0 hover:scale-110 transition-all duration-500 z-10 w-64 animate-float" style="--r: 6deg; animation-delay: 2s;">
+                <div class="w-full h-56 bg-gray-100 overflow-hidden mb-3">
+                    <img src="images/amanda3.jpeg" class="w-full h-full object-cover">
+                </div>
+                <div class="font-script text-2xl text-center text-gray-600">beaautyyyy</div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- The Letter & Proposal -->
+    <section class="min-h-screen flex flex-col items-center justify-center py-20 px-4 pb-32">
+        <div class="max-w-2xl w-full bg-white/90 backdrop-blur-md p-10 md:p-16 rounded shadow-2xl relative border border-white">
+            <!-- Decorative corner flourishes -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-valentine-pink via-valentine-rose to-valentine-red"></div>
+
+            <h2 class="font-script text-5xl text-center mb-8 text-gray-800">My Valentine,</h2>
+            
+            <div class="space-y-6 font-script text-2xl md:text-3xl leading-relaxed text-gray-700 text-center reveal-text-container">
+                <p class="reveal-text">Every day with you feels like a dream that I never want to wake up from. </p>
+                <p class="reveal-text">You are the love of my life and I'm grateful to have found you 11 months ago .</p>
+                <p class="reveal-text text-valentine-red">I've loved every second of these 11 months...</p>
+            </div>
+
+            <div class="mt-12 text-center">
+                <p class="font-sans text-sm tracking-widest text-gray-400 mb-4 uppercase">MOST IMPORTANT question</p>
+                
+                <!-- Secret Reveal Box -->
+                <div id="secret-box" class="cursor-pointer relative overflow-hidden group rounded-xl shadow-inner">
+                    <div id="blur-overlay" class="absolute inset-0 bg-valentine-rose/90 backdrop-blur-xl z-20 flex items-center justify-center transition-opacity duration-700">
+                        <span class="text-white font-sans font-semibold tracking-widest flex items-center gap-2 group-hover:scale-105 transition-transform">
+                            <i data-lucide="heart" class="w-4 h-4 fill-current"></i> TAP TO REVEAL
+                        </span>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-pink-50 to-red-50 p-8 border border-valentine-pink/30">
+                        <h3 class="font-script text-4xl md:text-5xl mb-8 text-gray-800 leading-tight">
+                            Will you be my   <span class="text-valentine-red">Valentine?</span>
+                        </h3>
+                        
+                        <div class="flex flex-col md:flex-row justify-center items-center gap-4 h-32 md:h-20 relative">
+                            <button onclick="acceptProposal()" class="px-8 py-3 bg-valentine-red hover:bg-red-600 text-white font-sans rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 z-10 w-full md:w-auto">
+                                YEEESSSSIIIRRR❤️
+                            </button>
+                            
+                            <button id="runaway-btn" class="px-8 py-3 bg-gray-200 text-gray-500 font-sans rounded-full hover:bg-gray-300 transition-colors duration-300 w-full md:w-auto">
+                                No
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // --- 1. Icons & Setup ---
+        lucide.createIcons();
+
+        // --- 2. Custom Cursor Logic ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            // Dot follows instantly
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Outline follows with slight delay
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // --- 3. Canvas Heart & Petal Background ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 8 + 6;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 + 0.2;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 1 - 0.5;
+                
+                // Randomly decide if it's a heart or a petal
+                this.type = Math.random() > 0.4 ? 'heart' : 'petal';
+                
+                // Colors based on type
+                if (this.type === 'heart') {
+                    this.color = `rgba(255, 117, 143, ${Math.random() * 0.3 + 0.1})`; // Rose
+                } else {
+                    const colors = [
+                        'rgba(255, 179, 193, 0.4)', // Pink
+                        'rgba(255, 240, 243, 0.6)', // Light
+                        'rgba(201, 24, 74, 0.15)'   // Deep Red (Subtle)
+                    ];
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
+                }
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.rotation += this.rotationSpeed;
+
+                if (this.y > height) this.y = -20;
+                if (this.x > width) this.x = -20;
+                if (this.x < -20) this.x = width;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                
+                if (this.type === 'heart') {
+                    // Draw Heart
+                    const s = this.size / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.bezierCurveTo(0, -s/2, -s, -s/2, -s, 0);
+                    ctx.bezierCurveTo(-s, s, 0, s*1.5, 0, s*2);
+                    ctx.bezierCurveTo(0, s*1.5, s, s, s, 0);
+                    ctx.bezierCurveTo(s, -s/2, 0, -s/2, 0, 0);
+                    ctx.fill();
+                } else {
+                    // Draw Petal
+                    ctx.beginPath();
+                    for(let i=0; i<4; i++) {
+                        ctx.ellipse(0, 5, this.size/2, this.size, i * Math.PI / 2, 0, 2 * Math.PI);
+                    }
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = window.innerWidth < 768 ? 20 : 45; 
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            initParticles();
+        });
+        resize();
+        initParticles();
+        animateParticles();
+
+        // --- 4. GSAP Animations ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Vine Growing Animation
+        gsap.to(".vine-line", {
+            height: "100%",
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#timeline-container",
+                start: "top center",
+                end: "bottom center",
+                scrub: 1
+            }
+        });
+
+        // Timeline Items Reveal
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            gsap.from(item, {
+                opacity: 0,
+                y: 50,
+                duration: 1,
+                scrollTrigger: {
+                    trigger: item,
+                    start: "top 80%",
+                    end: "top 50%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+        });
+
+        // Stats Counter Animation
+        const counters = document.querySelectorAll('.counter');
+        let hasCounted = false;
+
+        ScrollTrigger.create({
+            trigger: ".counter", /* Trigger earlier */
+            start: "top 85%",
+            onEnter: () => {
+                if (!hasCounted) {
+                    counters.forEach(counter => {
+                        const target = +counter.getAttribute('data-target');
+                        gsap.to(counter, {
+                            innerHTML: target,
+                            duration: 2.5,
+                            snap: { innerHTML: 1 },
+                            ease: "power2.out"
+                        });
+                    });
+                    hasCounted = true;
+                }
+            }
+        });
+
+        // Letter Text Reveal
+        const texts = document.querySelectorAll('.reveal-text');
+        texts.forEach((text, i) => {
+            gsap.from(text, {
+                opacity: 0,
+                y: 20,
+                duration: 1,
+                delay: i * 0.5,
+                scrollTrigger: {
+                    trigger: ".reveal-text-container",
+                    start: "top 70%"
+                }
+            });
+        });
+
+        // --- 5. Audio Player Logic ---
+        const audioBtn = document.getElementById('audioBtn');
+        const audio = document.getElementById('bgMusic');
+        let isPlaying = false;
+
+        audioBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audio.pause();
+                audioBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 ml-1"></i>';
+            } else {
+                audio.play();
+                audioBtn.innerHTML = '<i data-lucide="pause" class="w-5 h-5"></i>';
+            }
+            lucide.createIcons();
+            isPlaying = !isPlaying;
+        });
+
+        // --- 6. Proposal Logic ---
+        const secretBox = document.getElementById('secret-box');
+        const blurOverlay = document.getElementById('blur-overlay');
+        const runawayBtn = document.getElementById('runaway-btn');
+
+        // Reveal Handler
+        secretBox.addEventListener('click', function(e) {
+            // Only reveal if clicking overlay, not buttons
+            if (e.target.tagName !== 'BUTTON') {
+                blurOverlay.style.opacity = '0';
+                setTimeout(() => blurOverlay.style.display = 'none', 700);
+            }
+        });
+
+        // Runaway Button Logic
+        const moveButton = () => {
+            const containerRect = secretBox.getBoundingClientRect();
+            // Calculate random positions within the parent container
+            const maxLeft = secretBox.clientWidth - runawayBtn.clientWidth - 20;
+            const maxTop = secretBox.clientHeight - runawayBtn.clientHeight - 20;
+            
+            const newLeft = Math.random() * maxLeft;
+            const newTop = Math.random() * maxTop;
+
+            runawayBtn.style.position = 'absolute';
+            runawayBtn.style.left = `${newLeft}px`;
+            runawayBtn.style.top = `${newTop}px`;
+        };
+
+        runawayBtn.addEventListener('mouseover', moveButton);
+        runawayBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent click on mobile
+            moveButton();
+        });
+
+        // Acceptance Logic
+        window.acceptProposal = function() {
+            // Explosion of confetti
+            const duration = 15 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+              const timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              const particleCount = 50 * (timeLeft / duration);
+              
+              // Reds and Pinks for Valentine's
+              confetti(Object.assign({}, defaults, { 
+                  particleCount, 
+                  colors: ['#ff758f', '#c9184a', '#fff0f3'],
+                  origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } 
+              }));
+              confetti(Object.assign({}, defaults, { 
+                  particleCount, 
+                  colors: ['#ff758f', '#c9184a', '#fff0f3'],
+                  origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } 
+              }));
+            }, 250);
+
+            // Update UI
+            secretBox.innerHTML = `
+                <div class="p-12 text-center">
+                    <h3 class="font-script text-6xl text-valentine-red mb-4">Happy Valentine's! ❤️</h3>
+                    <p class="font-sans text-gray-600 text-lg">You make me the happiest person alive.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
